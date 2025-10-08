@@ -39,17 +39,17 @@ The dataset is a simple text file containing information and factual data about 
 ---
 
 ## Environment Setup
-Run the following commands in Google Colab to install dependencies:
+
+### 1. Install Dependencies
+Run the following commands in Google Colab to install all required libraries:
 
 ```python
 !pip install accelerate bitsandbytes datasets trl peft huggingface_hub transformers GPUtil
-These installations ensure that all necessary packages for model loading, fine-tuning, and monitoring are available in the Colab environment.
 
-Checking GPU Availability
+2. Checking GPU Availability
+
 Before running any model operations, verify that the GPU is available and properly configured:
 
-python
-Copy code
 from GPUtil import showUtilization as gpu_usage
 import torch, os
 
@@ -61,20 +61,21 @@ else:
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 This ensures that the code runs on the GPU rather than the CPU for faster computation.
 
-Hugging Face Login
+3. Hugging Face Login
+
 Llama-2 requires authentication before downloading because it is a gated model. Use your Hugging Face account token to log in:
 
-python
-Copy code
 from huggingface_hub import notebook_login
 notebook_login()
-Loading the Base Model with Quantization
+
+
+4. Loading the Base Model with Quantization
+
 Load the pre-trained base model with 4-bit quantization to fit within Colab’s GPU memory:
 
-python
-Copy code
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 import torch
 
@@ -88,21 +89,20 @@ bnb_config = BitsAndBytesConfig(
 )
 
 model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config)
+
 Quantization significantly reduces the memory footprint while maintaining most of the model’s performance.
 
-Dataset Loading and Tokenization
+5. Dataset Loading and Tokenization
+
 First, clone the dataset repository and load the custom dataset file:
 
-python
-Copy code
 !git clone https://github.com/policolab/fine-tuning-LLMs.git
 
 from datasets import load_dataset
 train_dataset = load_dataset("text", data_files={"train": "./fine-tuning-LLMs/data/hawaii_wf.txt"})
+
 Next, load the tokenizer and prepare the dataset for model training:
 
-python
-Copy code
 from transformers import LlamaTokenizer
 
 tokenizer = LlamaTokenizer.from_pretrained(base_model_id, use_fast=False, trust_remote_code=True, add_eos_token=True)
@@ -111,13 +111,13 @@ if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': tokenizer.eos_token})
 
 tokenized_train_dataset = [tokenizer(t) for t in train_dataset['train']['text']]
+
 Tokenization converts raw text into numerical tokens that the model can process.
 
-Model Preparation for Fine-Tuning
+6. Model Preparation for Fine-Tuning
+
 Prepare the model for fine-tuning with LoRA by enabling gradient checkpointing and applying the LoRA configuration:
 
-python
-Copy code
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
 model.gradient_checkpointing_enable()
@@ -133,13 +133,13 @@ config = LoraConfig(
 )
 
 model = get_peft_model(model, config)
+
 This step limits the number of trainable parameters, making fine-tuning efficient even with limited hardware.
 
-Training the Model
+7. Training the Model
+
 Define the training loop using the Hugging Face Trainer API:
 
-python
-Copy code
 import transformers
 
 trainer = transformers.Trainer(
@@ -163,13 +163,14 @@ trainer = transformers.Trainer(
 
 model.config.use_cache = False
 trainer.train()
-The Trainer handles training, evaluation, and checkpoint saving automatically. The training parameters are optimized for low-memory environments.
 
-Loading the Fine-Tuned Model and Inference
+The Trainer handles training, evaluation, and checkpoint saving automatically.
+The parameters above are optimized for low-memory environments such as Colab.
+
+8. Loading the Fine-Tuned Model and Running Inference
+
 Once training is complete, load the fine-tuned model for testing and generate predictions:
 
-python
-Copy code
 from peft import PeftModel
 
 base_model = AutoModelForCausalLM.from_pretrained(
@@ -192,41 +193,43 @@ with torch.no_grad():
     output = model.generate(**prompt_tokenized, max_new_tokens=100)
 
 print(tokenizer.decode(output[0], skip_special_tokens=True))
+
 This code uses the fine-tuned model to answer questions related to Hawaii wildfires based on the information learned during fine-tuning.
 
-Example Output
-text
-Copy code
+9. Example Output
+
 Question: When did Hawaii wildfires start?
 Answer: The Hawaii wildfires began on August 8, 2023, due to dry conditions and strong winds...
-Project Structure
-bash
-Copy code
+
+10. Project Structure
 ├── data/
 │   └── hawaii_wf.txt           # Custom dataset
 ├── experiments/                # Fine-tuning checkpoints
 ├── fine_tune_llama.ipynb       # Main Colab notebook
 ├── README.md                   # Project documentation
-Requirements
+
+11. Requirements
+
 Python version 3.10 or higher
 
 GPU with at least 15 GB VRAM (Google Colab T4 recommended)
 
 Hugging Face account for Llama model access
 
-Acknowledgments
+12. Acknowledgments
+
 Meta AI for Llama 2 model release
 
 Hugging Face for hosting and library support
 
 Google Colab for providing free GPU resources
 
-License
+13. License
+
 This project is open-source and available under the MIT License.
 
-yaml
-Copy code
 
 ---
 
-Would you like me to generate a downloadable `.md` file for this so you can directly add it to your GitHub or C
+Would you like me to combine this with your previous **overview and key concepts section** into one complete `.md` file ready to download?
+
