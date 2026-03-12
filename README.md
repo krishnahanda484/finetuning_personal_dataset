@@ -231,5 +231,4 @@ This project is open-source and available under the MIT License.
 
 ---
 
-Would you like me to combine this with your previous **overview and key concepts section** into one complete `.md` file ready to download?
 
